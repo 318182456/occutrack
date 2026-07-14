@@ -2,6 +2,7 @@
 
 export interface Env {
   ASSETS: Fetcher;
+  KV: KVNamespace;
   GEMINI_API_KEY?: string;
 }
 
@@ -65,7 +66,7 @@ async function callGemini(
 
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-    const { pathname } = new URL(request.url);
+    const { pathname, searchParams } = new URL(request.url);
 
     if (request.method === 'OPTIONS') {
       return new Response(null, { status: 204, headers: CORS });
@@ -74,11 +75,40 @@ export default {
     const apiKey = env.GEMINI_API_KEY;
 
     if (pathname.startsWith('/api/')) {
-      if (!apiKey) {
-        return err('GEMINI_API_KEY is not set on the worker environment.', 500);
-      }
-
       try {
+        // KV Data Sync Endpoints
+        if (pathname === '/api/data') {
+          if (request.method === 'GET') {
+            const userId = searchParams.get('userId');
+            if (!userId) {
+              return err('Missing userId parameter', 400);
+            }
+            const key = `occutrack:user:${userId}`;
+            const val = await env.KV.get(key);
+            if (!val) {
+              return ok([]);
+            }
+            return ok(JSON.parse(val));
+          }
+
+          if (request.method === 'POST') {
+            const { userId, data } = await request.json() as any;
+            if (!userId || !data) {
+              return err('Missing userId or data body parameters', 400);
+            }
+            const key = `occutrack:user:${userId}`;
+            await env.KV.put(key, JSON.stringify(data));
+            return ok({ success: true });
+          }
+
+          return err('Method not allowed', 405);
+        }
+
+        // AI endpoints requiring API Key
+        if (!apiKey) {
+          return err('GEMINI_API_KEY is not set on the worker environment.', 500);
+        }
+
         // 1. AI Chatbot Advice Endpoint
         if (pathname === '/api/chat' && request.method === 'POST') {
           const { message, history, memberContext } = await request.json() as any;

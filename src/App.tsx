@@ -19,6 +19,8 @@ export default function App() {
   const [activeMemberId, setActiveMemberId] = useState<string>('1');
   const [activeTab, setActiveTab] = useState<string>('today');
   const [showAddModal, setShowAddModal] = useState<boolean>(false);
+  const [userId, setUserId] = useState<string>('');
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   // Modal input states
   const [newName, setNewName] = useState('');
@@ -27,29 +29,78 @@ export default function App() {
   const [newCycleLength, setNewCycleLength] = useState(3);
   const [newTargetHours, setNewTargetHours] = useState(6);
 
-  // Load from local storage
+  // Load and initialize userId
   useEffect(() => {
-    const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        if (parsed && parsed.length > 0) {
-          setMembers(parsed);
-          setActiveMemberId(parsed[0].id);
-          return;
-        }
-      } catch (e) {
-        console.error('Error loading saved members', e);
-      }
+    let id = localStorage.getItem('occutrack_user_id');
+    if (!id) {
+      id = crypto.randomUUID();
+      localStorage.setItem('occutrack_user_id', id);
     }
-    setMembers(DEFAULT_MEMBERS);
-    setActiveMemberId('');
+    setUserId(id);
   }, []);
 
-  // Save to local storage whenever members update
-  const saveMembers = (updated: FamilyMember[]) => {
+  // Fetch data from KV when userId changes
+  useEffect(() => {
+    if (!userId) return;
+
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        const res = await fetch(`/api/data?userId=${userId}`);
+        if (res.ok) {
+          const parsed = await res.json();
+          if (parsed && Array.isArray(parsed)) {
+            setMembers(parsed);
+            if (parsed.length > 0) {
+              setActiveMemberId(parsed[0].id);
+            }
+            setIsLoading(false);
+            return;
+          }
+        }
+      } catch (e) {
+        console.error('Error fetching data from KV:', e);
+      }
+
+      // Local fallback
+      const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          if (parsed && parsed.length > 0) {
+            setMembers(parsed);
+            setActiveMemberId(parsed[0].id);
+          }
+        } catch (e) {
+          console.error('Error loading saved members', e);
+        }
+      }
+      setIsLoading(false);
+    };
+
+    fetchData();
+  }, [userId]);
+
+  const handleRestoreUserId = (newId: string) => {
+    localStorage.setItem('occutrack_user_id', newId);
+    setUserId(newId);
+  };
+
+  // Save to local storage and KV sync
+  const saveMembers = async (updated: FamilyMember[]) => {
     setMembers(updated);
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updated));
+    if (userId) {
+      try {
+        await fetch('/api/data', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId, data: updated })
+        });
+      } catch (e) {
+        console.error('Error syncing data to KV:', e);
+      }
+    }
   };
 
   const handleUpdateMember = (updatedMember: FamilyMember) => {
@@ -99,6 +150,15 @@ export default function App() {
   const activeMember = members.find(m => m.id === activeMemberId) || members[0];
 
   const renderActiveScreen = () => {
+    if (isLoading) {
+      return (
+        <div className="flex flex-col items-center justify-center text-center p-6 py-24 bg-white rounded-2xl border border-[#e0e3e5] shadow-xs space-y-4">
+          <div className="w-10 h-10 border-4 border-[#004ac6] border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-xs text-gray-500 font-semibold">正在同步云端数据...</p>
+        </div>
+      );
+    }
+
     if (members.length === 0) {
       return (
         <div className="flex flex-col items-center justify-center text-center p-6 py-16 bg-white rounded-2xl border border-[#e0e3e5] shadow-xs space-y-6">
@@ -132,7 +192,14 @@ export default function App() {
       case 'stats':
         return <MobileStats member={activeMember} />;
       case 'settings':
-        return <MobileSettings member={activeMember} onUpdateMember={handleUpdateMember} />;
+        return (
+          <MobileSettings
+            member={activeMember}
+            onUpdateMember={handleUpdateMember}
+            userId={userId}
+            onRestoreUserId={handleRestoreUserId}
+          />
+        );
       default:
         return <MobileToday member={activeMember} onUpdateMember={handleUpdateMember} />;
     }
