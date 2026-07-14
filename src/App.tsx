@@ -1,0 +1,295 @@
+import React, { useState, useEffect } from 'react';
+import { FamilyMember, Eye } from './types';
+import { MobileContainer } from './components/MobileContainer';
+import { MobileToday } from './components/MobileToday';
+import { MobileCalendar } from './components/MobileCalendar';
+import { MobileStats } from './components/MobileStats';
+import { MobileSettings } from './components/MobileSettings';
+import { MobileAI } from './components/MobileAI';
+import { motion, AnimatePresence } from 'motion/react';
+import { X, UserPlus, Heart, Sparkles } from 'lucide-react';
+import { cn } from './lib/utils';
+
+const LOCAL_STORAGE_KEY = 'occutrack_family_members';
+
+// Default mock family data so the application looks gorgeous and fully set up right away!
+const DEFAULT_MEMBERS: FamilyMember[] = [
+  {
+    id: '1',
+    name: '小明',
+    age: '6',
+    avatar: '👦',
+    cycleLength: 3,
+    cyclePattern: ['left', 'left', 'right'],
+    startDate: '2026-07-01',
+    targetHours: 6,
+    completedDates: {
+      '2026-07-10': { completed: true, hours: 6, remarks: '配合度极高，看书很认真 ⭐' },
+      '2026-07-11': { completed: true, hours: 6, remarks: '骑自行车时遮盖，很开心 🚴' },
+      '2026-07-12': { completed: true, hours: 6, remarks: '玩积木很专心' },
+      '2026-07-13': { completed: true, hours: 6, remarks: '画画时遮盖 🎨' }
+    }
+  },
+  {
+    id: '2',
+    name: '小华',
+    age: '4',
+    avatar: '👧',
+    cycleLength: 2,
+    cyclePattern: ['left', 'right'],
+    startDate: '2026-07-05',
+    targetHours: 4,
+    completedDates: {
+      '2026-07-12': { completed: true, hours: 4, remarks: '非常乖巧 🌸' },
+      '2026-07-13': { completed: false, hours: 0, remarks: '有一点点闹脾气，明天再补' }
+    }
+  }
+];
+
+export default function App() {
+  const [members, setMembers] = useState<FamilyMember[]>([]);
+  const [activeMemberId, setActiveMemberId] = useState<string>('1');
+  const [activeTab, setActiveTab] = useState<string>('today');
+  const [showAddModal, setShowAddModal] = useState<boolean>(false);
+
+  // Modal input states
+  const [newName, setNewName] = useState('');
+  const [newAge, setNewAge] = useState('5');
+  const [newAvatar, setNewAvatar] = useState('👦');
+  const [newCycleLength, setNewCycleLength] = useState(3);
+  const [newTargetHours, setNewTargetHours] = useState(6);
+
+  // Load from local storage
+  useEffect(() => {
+    const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed && parsed.length > 0) {
+          setMembers(parsed);
+          setActiveMemberId(parsed[0].id);
+          return;
+        }
+      } catch (e) {
+        console.error('Error loading saved members', e);
+      }
+    }
+    setMembers(DEFAULT_MEMBERS);
+    setActiveMemberId('1');
+  }, []);
+
+  // Save to local storage whenever members update
+  const saveMembers = (updated: FamilyMember[]) => {
+    setMembers(updated);
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updated));
+  };
+
+  const handleUpdateMember = (updatedMember: FamilyMember) => {
+    const nextMembers = members.map(m => m.id === updatedMember.id ? updatedMember : m);
+    saveMembers(nextMembers);
+  };
+
+  const handleSelectMember = (id: string) => {
+    setActiveMemberId(id);
+  };
+
+  const handleCreateMember = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newName.trim()) return;
+
+    // Default cycle pattern is left, left, right... matching the default cycle length
+    const pattern: Eye[] = [];
+    for (let i = 0; i < newCycleLength; i++) {
+      pattern.push(i % 3 < 2 ? 'left' : 'right');
+    }
+
+    const newMember: FamilyMember = {
+      id: Date.now().toString(),
+      name: newName,
+      age: newAge,
+      avatar: newAvatar,
+      cycleLength: newCycleLength,
+      cyclePattern: pattern,
+      startDate: new Date().toISOString().split('T')[0],
+      targetHours: newTargetHours,
+      completedDates: {}
+    };
+
+    const nextMembers = [...members, newMember];
+    saveMembers(nextMembers);
+    setActiveMemberId(newMember.id);
+    setShowAddModal(false);
+
+    // Reset fields
+    setNewName('');
+    setNewAge('5');
+    setNewAvatar('👦');
+    setNewCycleLength(3);
+    setNewTargetHours(6);
+  };
+
+  const activeMember = members.find(m => m.id === activeMemberId) || members[0];
+
+  const renderActiveScreen = () => {
+    if (!activeMember) return null;
+
+    switch (activeTab) {
+      case 'today':
+        return <MobileToday member={activeMember} onUpdateMember={handleUpdateMember} />;
+      case 'calendar':
+        return <MobileCalendar member={activeMember} onUpdateMember={handleUpdateMember} />;
+      case 'ai':
+        return <MobileAI member={activeMember} />;
+      case 'stats':
+        return <MobileStats member={activeMember} />;
+      case 'settings':
+        return <MobileSettings member={activeMember} onUpdateMember={handleUpdateMember} />;
+      default:
+        return <MobileToday member={activeMember} onUpdateMember={handleUpdateMember} />;
+    }
+  };
+
+  const avatarsList = ['👦', '👧', '👶', '🦁', '🐨', '🐼', '🐱', '🐶', '🦄', '🐰'];
+
+  return (
+    <div className="relative">
+      <MobileContainer
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        members={members}
+        activeMemberId={activeMemberId}
+        onSelectMember={handleSelectMember}
+        onAddMember={() => setShowAddModal(true)}
+      >
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={`${activeMemberId}-${activeTab}`}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.15 }}
+          >
+            {renderActiveScreen()}
+          </motion.div>
+        </AnimatePresence>
+      </MobileContainer>
+
+      {/* Cute in-app Modal to Add New Family Members */}
+      <AnimatePresence>
+        {showAddModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white rounded-2xl p-5 shadow-2xl max-w-sm w-full border border-[#e0e3e5]"
+            >
+              <div className="flex items-center justify-between border-b border-[#e0e3e5]/60 pb-3 mb-4">
+                <h3 className="text-sm font-bold text-[#191c1e] flex items-center space-x-1.5">
+                  <UserPlus className="w-4 h-4 text-[#004ac6]" />
+                  <span>添加新的宝贝/家庭成员</span>
+                </h3>
+                <button
+                  onClick={() => setShowAddModal(false)}
+                  className="p-1 text-[#737686] hover:text-[#191c1e] rounded-md transition-colors"
+                >
+                  <X className="w-4.5 h-4.5" />
+                </button>
+              </div>
+
+              <form onSubmit={handleCreateMember} className="space-y-4 text-xs">
+                {/* Name */}
+                <div>
+                  <label className="block text-[#434655] font-bold mb-1.5">宝贝昵称/名字</label>
+                  <input
+                    type="text"
+                    required
+                    value={newName}
+                    onChange={(e) => setNewName(e.target.value)}
+                    placeholder="如：小主、妹妹"
+                    className="w-full border border-[#e0e3e5] rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-[#004ac6] bg-[#f9fafb]"
+                  />
+                </div>
+
+                {/* Age */}
+                <div>
+                  <label className="block text-[#434655] font-bold mb-1.5">年龄</label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={100}
+                    value={newAge}
+                    onChange={(e) => setNewAge(e.target.value)}
+                    className="w-full border border-[#e0e3e5] rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-[#004ac6] bg-[#f9fafb]"
+                  />
+                </div>
+
+                {/* Avatar selection list */}
+                <div>
+                  <label className="block text-[#434655] font-bold mb-1.5">选择专属头像/标识</label>
+                  <div className="grid grid-cols-5 gap-2">
+                    {avatarsList.map((av) => (
+                      <button
+                        key={av}
+                        type="button"
+                        onClick={() => setNewAvatar(av)}
+                        className={cn(
+                          "h-10 text-xl flex items-center justify-center rounded-lg border transition-all active:scale-95",
+                          newAvatar === av
+                            ? "bg-[#e2eafb] border-[#004ac6]"
+                            : "bg-[#f9fafb] border-gray-100 hover:bg-gray-50"
+                        )}
+                      >
+                        {av}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Cycle and Target configuration */}
+                <div className="grid grid-cols-2 gap-3 pt-1">
+                  <div>
+                    <label className="block text-[#434655] font-bold mb-1.5">默认周期天数</label>
+                    <select
+                      value={newCycleLength}
+                      onChange={(e) => setNewCycleLength(parseInt(e.target.value))}
+                      className="w-full border border-[#e0e3e5] rounded-lg p-2.5 bg-[#f9fafb]"
+                    >
+                      <option value={2}>2天循环</option>
+                      <option value={3}>3天循环 (2左/1右)</option>
+                      <option value={4}>4天循环</option>
+                      <option value={5}>5天循环</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[#434655] font-bold mb-1.5">每日目标小时</label>
+                    <input
+                      type="number"
+                      min={1}
+                      max={12}
+                      value={newTargetHours}
+                      onChange={(e) => setNewTargetHours(parseInt(e.target.value))}
+                      className="w-full border border-[#e0e3e5] rounded-lg p-2.5 bg-[#f9fafb]"
+                    />
+                  </div>
+                </div>
+
+                {/* Action button */}
+                <div className="pt-3">
+                  <button
+                    type="submit"
+                    className="w-full bg-[#004ac6] hover:bg-[#003ea8] text-white py-3 rounded-lg font-bold transition-all flex items-center justify-center space-x-1"
+                  >
+                    <Sparkles className="w-4 h-4 text-amber-300" />
+                    <span>立即创建</span>
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}

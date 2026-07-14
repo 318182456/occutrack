@@ -1,0 +1,6 @@
+{
+  "name": "OccuTrack 家庭护眼卫士",
+  "description": "专为家庭设计的儿童眼科遮盖（弱视训练）智能追踪助手，帮助家长科学记录并鼓励宝贝健康遮眼。",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
