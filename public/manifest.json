@@ -1,0 +1,18 @@
+{
+  "name": "OccuTrack 家庭护眼卫士",
+  "short_name": "OccuTrack",
+  "description": "专业温情儿童弱视遮盖与视力训练助手",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0f172a",
+  "theme_color": "#4f46e5",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

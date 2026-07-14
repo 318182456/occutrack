@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#312e81" />
+      <stop offset="50%" stop-color="#1e1b4b" />
+      <stop offset="100%" stop-color="#0f172a" />
+    </linearGradient>
+    <linearGradient id="brandGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#818cf8" />
+      <stop offset="100%" stop-color="#4f46e5" />
+    </linearGradient>
+    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#0284c7" />
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="12" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Background Shield/Rounded Card -->
+  <rect width="512" height="512" rx="128" fill="url(#bgGrad)" />
+
+  <!-- Outer Ring (Tracking representation) -->
+  <circle cx="256" cy="256" r="210" fill="none" stroke="url(#brandGrad)" stroke-width="12" stroke-dasharray="15 15" opacity="0.3" />
+
+  <!-- Shield Shape (Protection / Occlusion Therapy) -->
+  <path d="M256,70 C160,70 110,120 110,220 C110,340 256,430 256,430 C256,430 402,340 402,220 C402,120 352,70 256,70 Z" fill="none" stroke="url(#brandGrad)" stroke-width="8" opacity="0.5" />
+
+  <!-- Eye Shape Outer (Rich gradient with glow) -->
+  <path d="M120,256 C170,170 220,130 256,130 C292,130 342,170 392,256 C342,342 292,382 256,382 C220,382 170,342 120,256 Z" fill="url(#brandGrad)" opacity="0.85" filter="url(#glow)" />
+  <path d="M140,256 C185,185 225,150 256,150 C287,150 327,185 372,256 C327,327 287,362 256,362 C225,362 185,327 140,256 Z" fill="#ffffff" opacity="0.9" />
+
+  <!-- Iris (Eye tracking progress indicator) -->
+  <circle cx="256" cy="256" r="80" fill="url(#accentGrad)" />
+
+  <!-- Pupil -->
+  <circle cx="256" cy="256" r="40" fill="#0f172a" />
+
+  <!-- Highlights (To make it pop and look premium) -->
+  <circle cx="236" cy="236" r="16" fill="#ffffff" opacity="0.8" />
+  <circle cx="276" cy="276" r="8" fill="#ffffff" opacity="0.6" />
+
+  <!-- Sparkles / Star (Success / Patching complete) -->
+  <path d="M400,100 L405,115 L420,120 L405,125 L400,140 L395,125 L380,120 L395,115 Z" fill="#38bdf8" />
+  <path d="M100,400 L103,410 L113,413 L103,416 L100,426 L97,416 L87,413 L97,410 Z" fill="#818cf8" />
+</svg>
