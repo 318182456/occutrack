@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Eye as EyeIcon, Check, Smile, Clock, Sparkles, BookOpen, PenTool, Award, Plus, Minus } from 'lucide-react';
+import { Eye as EyeIcon, Check, Smile, Clock, Sparkles, BookOpen, PenTool, Award, Plus, Minus, ChevronDown } from 'lucide-react';
 import { FamilyMember, Eye } from '../types';
 import { getEyeForDate, getCycleDayIndex, getStreak } from '../lib/patchUtils';
 import { format } from 'date-fns';
@@ -24,6 +24,7 @@ export function MobileToday({ member, onUpdateMember }: MobileTodayProps) {
   const [hours, setHours] = useState(session.hours || member.targetHours);
   const [remarks, setRemarks] = useState(session.remarks || '');
   const [showCelebrate, setShowCelebrate] = useState(false);
+  const [showTagsDropdown, setShowTagsDropdown] = useState(false);
 
   // Quick remarks helper tags
   const quickTags = [
@@ -54,10 +55,17 @@ export function MobileToday({ member, onUpdateMember }: MobileTodayProps) {
     }
   };
 
-  const handleQuickTagClick = (tagLabel: string) => {
-    const newRemarks = remarks ? `${remarks} | ${tagLabel}` : tagLabel;
+  const handleToggleTag = (tagLabel: string) => {
+    const activeTags = remarks ? remarks.split('|').map(t => t.trim()).filter(Boolean) : [];
+    let newRemarks = '';
+    
+    if (activeTags.includes(tagLabel)) {
+      newRemarks = activeTags.filter(t => t !== tagLabel).join(' | ');
+    } else {
+      newRemarks = remarks ? `${remarks} | ${tagLabel}` : tagLabel;
+    }
+    
     setRemarks(newRemarks);
-    // Auto-update in state
     const updatedDates = {
       ...member.completedDates,
       [todayStr]: {
@@ -89,6 +97,9 @@ export function MobileToday({ member, onUpdateMember }: MobileTodayProps) {
       });
     }
   };
+
+  const activeTags = remarks ? remarks.split('|').map(t => t.trim()).filter(Boolean) : [];
+  const selectedCount = quickTags.filter(tag => activeTags.includes(tag.label)).length;
 
   return (
     <div className="space-y-5 pb-16">
@@ -227,18 +238,57 @@ export function MobileToday({ member, onUpdateMember }: MobileTodayProps) {
           <span>今日训练反馈</span>
         </h3>
 
-        {/* Quick Tags Scroll */}
-        <div className="flex space-x-2 overflow-x-auto pb-3 -mx-2 px-2 scrollbar-none">
-          {quickTags.map((tag, idx) => (
-            <button
-              key={idx}
-              onClick={() => handleQuickTagClick(tag.label)}
-              className="flex-shrink-0 flex items-center space-x-1 bg-[#f2f4f6] text-xs font-medium text-[#434655] px-3 py-2 rounded-full border border-[#e0e3e5] hover:bg-[#e6e8ea] active:scale-95 transition-transform"
-            >
-              <tag.icon className="w-3.5 h-3.5 text-[#004ac6]" />
-              <span>{tag.label}</span>
-            </button>
-          ))}
+        {/* Quick Tags Custom Dropdown */}
+        <div className="relative mb-3">
+          <button
+            type="button"
+            onClick={() => setShowTagsDropdown(!showTagsDropdown)}
+            className="w-full flex items-center justify-between bg-[#f7f9fb] border border-[#e0e3e5] rounded-lg px-3.5 py-2.5 text-xs font-semibold text-[#434655] hover:bg-[#f0f2f5] active:scale-[0.99] transition-all"
+          >
+            <span className="flex items-center space-x-1.5">
+              <span>🏷️</span>
+              <span>
+                {selectedCount > 0 ? `已选择 ${selectedCount} 个训练标签` : '选择今日训练标签...'}
+              </span>
+            </span>
+            <ChevronDown className="w-4 h-4 text-gray-400" />
+          </button>
+
+          {showTagsDropdown && (
+            <>
+              {/* Overlay backdrop to close */}
+              <div 
+                className="fixed inset-0 z-30" 
+                onClick={() => setShowTagsDropdown(false)} 
+              />
+              
+              {/* Dropdown Card */}
+              <div className="absolute left-0 right-0 mt-1.5 bg-white border border-[#e0e3e5] rounded-xl shadow-xl z-40 py-1.5 text-xs animate-in fade-in slide-in-from-top-1.5 duration-100">
+                {quickTags.map((tag, idx) => {
+                  const isSelected = activeTags.includes(tag.label);
+                  return (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => handleToggleTag(tag.label)}
+                      className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#e2eafb]/20 text-[#434655] transition-colors"
+                    >
+                      <span className="flex items-center space-x-2.5">
+                        <tag.icon className="w-4 h-4 text-[#004ac6]" />
+                        <span className="font-medium">{tag.label}</span>
+                      </span>
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => {}} // Controlled purely by button click
+                        className="w-4 h-4 rounded text-[#004ac6] border-gray-300 focus:ring-[#004ac6]"
+                      />
+                    </button>
+                  );
+                })}
+              </div>
+            </>
+          )}
         </div>
 
         {/* Text Input */}
