@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Users, UserPlus, Heart, Home, Calendar, BarChart2, Settings, Sparkles } from 'lucide-react';
+import { Users, UserPlus, Heart, Home, Calendar, BarChart2, Settings, Sparkles, Pencil } from 'lucide-react';
 import { FamilyMember } from '../types';
 import { cn } from '../lib/utils';
 import { motion } from 'motion/react';
@@ -13,6 +13,7 @@ interface MobileContainerProps {
   activeMemberId: string;
   onSelectMember: (id: string) => void;
   onAddMember: () => void;
+  onEditMember: (member: FamilyMember) => void;
 }
 
 export function MobileContainer({
@@ -22,7 +23,8 @@ export function MobileContainer({
   members,
   activeMemberId,
   onSelectMember,
-  onAddMember
+  onAddMember,
+  onEditMember,
 }: MobileContainerProps) {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const activeMember = members.find(m => m.id === activeMemberId) || members[0];
@@ -72,23 +74,38 @@ export function MobileContainer({
                   切换小卫士
                 </div>
                 {members.map((m) => (
-                  <button
+                  <div
                     key={m.id}
-                    onClick={() => {
-                      onSelectMember(m.id);
-                      setShowProfileMenu(false);
-                    }}
                     className={cn(
-                      "w-full text-left px-4 py-2.5 text-xs flex items-center justify-between hover:bg-gray-50 transition-colors",
-                      m.id === activeMemberId ? "text-[#004ac6] font-bold bg-[#e2eafb]/20" : "text-[#434655]"
+                      "w-full flex items-center justify-between hover:bg-gray-50 transition-colors pr-2",
+                      m.id === activeMemberId ? "bg-[#e2eafb]/20" : ""
                     )}
                   >
-                    <span className="flex items-center space-x-2">
+                    <button
+                      onClick={() => {
+                        onSelectMember(m.id);
+                        setShowProfileMenu(false);
+                      }}
+                      className={cn(
+                        "flex-1 text-left px-4 py-2.5 text-xs flex items-center space-x-2",
+                        m.id === activeMemberId ? "text-[#004ac6] font-bold" : "text-[#434655]"
+                      )}
+                    >
                       <span>{m.avatar}</span>
                       <span>{m.name} ({getMemberAge(m)}岁)</span>
-                    </span>
-                    {m.id === activeMemberId && <span className="text-xs">✓</span>}
-                  </button>
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onEditMember(m);
+                        setShowProfileMenu(false);
+                      }}
+                      className="p-1.5 text-gray-400 hover:text-[#004ac6] transition-colors rounded-md active:scale-95"
+                      title="编辑"
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 ))}
                 
                 <div className="border-t border-gray-100 mt-1 pt-1">

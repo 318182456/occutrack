@@ -29,6 +29,13 @@ export default function App() {
   const [newCycleLength, setNewCycleLength] = useState(3);
   const [newTargetHours, setNewTargetHours] = useState(6);
 
+  // Edit member states
+  const [showEditModal, setShowEditModal] = useState<boolean>(false);
+  const [editingMember, setEditingMember] = useState<FamilyMember | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editBirthDate, setEditBirthDate] = useState('2021-01-01');
+  const [editAvatar, setEditAvatar] = useState('👦');
+
   // Load and initialize userId
   useEffect(() => {
     let id = localStorage.getItem('occutrack_user_id');
@@ -152,6 +159,49 @@ export default function App() {
     setNewTargetHours(6);
   };
 
+  const handleStartEditMember = (member: FamilyMember) => {
+    setEditingMember(member);
+    setEditName(member.name);
+    setEditBirthDate(member.birthDate || '2021-01-01');
+    setEditAvatar(member.avatar);
+    setShowEditModal(true);
+  };
+
+  const handleSaveEditMember = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingMember || !editName.trim()) return;
+
+    const calculatedAge = editBirthDate 
+      ? String(Math.max(0, new Date().getFullYear() - new Date(editBirthDate).getFullYear()))
+      : editingMember.age;
+
+    const updatedMember: FamilyMember = {
+      ...editingMember,
+      name: editName,
+      age: calculatedAge,
+      birthDate: editBirthDate,
+      avatar: editAvatar,
+    };
+
+    const nextMembers = members.map(m => m.id === updatedMember.id ? updatedMember : m);
+    saveMembers(nextMembers);
+    setShowEditModal(false);
+    setEditingMember(null);
+  };
+
+  const handleDeleteMember = (memberId: string) => {
+    if (!window.confirm('确定要删除这位宝贝的所有打卡记录吗？删除后将无法恢复！')) {
+      return;
+    }
+    const nextMembers = members.filter(m => m.id !== memberId);
+    saveMembers(nextMembers);
+    if (activeMemberId === memberId) {
+      setActiveMemberId(nextMembers[0]?.id || '');
+    }
+    setShowEditModal(false);
+    setEditingMember(null);
+  };
+
   const activeMember = members.find(m => m.id === activeMemberId) || members[0];
 
   const renderActiveScreen = () => {
@@ -221,6 +271,7 @@ export default function App() {
         activeMemberId={activeMemberId}
         onSelectMember={handleSelectMember}
         onAddMember={() => setShowAddModal(true)}
+        onEditMember={handleStartEditMember}
       >
         <AnimatePresence mode="wait">
           <motion.div
@@ -343,6 +394,103 @@ export default function App() {
                   >
                     <Sparkles className="w-4 h-4 text-amber-300" />
                     <span>立即创建</span>
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Cute in-app Modal to Edit Family Members */}
+      <AnimatePresence>
+        {showEditModal && editingMember && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white rounded-2xl p-6 w-full max-w-sm border border-[#e0e3e5] shadow-2xl relative"
+            >
+              <button
+                onClick={() => {
+                  setShowEditModal(false);
+                  setEditingMember(null);
+                }}
+                className="absolute top-4 right-4 p-1.5 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 transition-all"
+              >
+                <X className="w-4 h-4" />
+              </button>
+
+              <div className="text-center mb-5">
+                <span className="text-3xl">{editAvatar}</span>
+                <h3 className="text-sm font-bold text-gray-800 mt-2">编辑宝贝信息</h3>
+                <p className="text-[10px] text-gray-500 mt-0.5">更新宝贝的名称、头像或出生日期</p>
+              </div>
+
+              <form onSubmit={handleSaveEditMember} className="space-y-4 text-xs">
+                {/* Name */}
+                <div>
+                  <label className="block text-[#434655] font-bold mb-1.5">宝贝昵称/名字</label>
+                  <input
+                    type="text"
+                    required
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    placeholder="如：小主、妹妹"
+                    className="w-full border border-[#e0e3e5] rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-[#004ac6] bg-[#f9fafb]"
+                  />
+                </div>
+
+                {/* Birth Date */}
+                <div>
+                  <label className="block text-[#434655] font-bold mb-1.5">出生日期</label>
+                  <input
+                    type="date"
+                    required
+                    value={editBirthDate}
+                    onChange={(e) => setEditBirthDate(e.target.value)}
+                    className="w-full border border-[#e0e3e5] rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-[#004ac6] bg-[#f9fafb]"
+                  />
+                </div>
+
+                {/* Avatar selection list */}
+                <div>
+                  <label className="block text-[#434655] font-bold mb-1.5">选择专属头像/标识</label>
+                  <div className="grid grid-cols-5 gap-2">
+                    {avatarsList.map((av) => (
+                      <button
+                        key={av}
+                        type="button"
+                        onClick={() => setEditAvatar(av)}
+                        className={cn(
+                          "h-10 text-xl flex items-center justify-center rounded-lg border transition-all active:scale-95",
+                          editAvatar === av
+                            ? "bg-[#e2eafb] border-[#004ac6]"
+                            : "bg-[#f9fafb] border-gray-100 hover:bg-gray-50"
+                        )}
+                      >
+                        {av}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Buttons */}
+                <div className="pt-2 space-y-2">
+                  <button
+                    type="submit"
+                    className="w-full bg-[#004ac6] hover:bg-[#003ea8] text-white py-3 rounded-lg font-bold transition-all active:scale-[0.98]"
+                  >
+                    保存修改
+                  </button>
+                  
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteMember(editingMember.id)}
+                    className="w-full bg-white border border-rose-200 hover:bg-rose-50 text-rose-600 py-3 rounded-lg font-bold transition-all active:scale-[0.98] flex items-center justify-center space-x-1"
+                  >
+                    <span>删除该成员</span>
                   </button>
                 </div>
               </form>
