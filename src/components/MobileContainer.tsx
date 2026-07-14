@@ -34,7 +34,7 @@ export function MobileContainer({
   ];
 
   return (
-    <div className="min-h-screen bg-[#eceef0] flex items-center justify-center p-0 sm:p-6 font-sans">
+    <div className="min-h-[100dvh] sm:min-h-screen bg-[#eceef0] flex flex-col sm:items-center sm:justify-center p-0 sm:p-6 font-sans">
       {/* Smartphone Mockup Wrapping (Enabled on sm: breakpoints, full-viewport on mobile) */}
       <div className="w-full h-[100dvh] sm:h-[840px] sm:max-w-[420px] bg-[#f7f9fb] sm:rounded-[36px] sm:shadow-2xl border-0 sm:border-[10px] border-[#191c1e] flex flex-col overflow-hidden relative">
         
