@@ -141,7 +141,7 @@ export default function App() {
   const avatarsList = ['👦', '👧', '👶', '🦁', '🐨', '🐼', '🐱', '🐶', '🦄', '🐰'];
 
   return (
-    <div className="relative">
+    <div className="relative w-full h-full">
       <MobileContainer
         activeTab={activeTab}
         setActiveTab={setActiveTab}
