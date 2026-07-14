@@ -12,39 +12,8 @@ import { cn } from './lib/utils';
 
 const LOCAL_STORAGE_KEY = 'occutrack_family_members';
 
-// Default mock family data so the application looks gorgeous and fully set up right away!
-const DEFAULT_MEMBERS: FamilyMember[] = [
-  {
-    id: '1',
-    name: '小明',
-    age: '6',
-    avatar: '👦',
-    cycleLength: 3,
-    cyclePattern: ['left', 'left', 'right'],
-    startDate: '2026-07-01',
-    targetHours: 6,
-    completedDates: {
-      '2026-07-10': { completed: true, hours: 6, remarks: '配合度极高，看书很认真 ⭐' },
-      '2026-07-11': { completed: true, hours: 6, remarks: '骑自行车时遮盖，很开心 🚴' },
-      '2026-07-12': { completed: true, hours: 6, remarks: '玩积木很专心' },
-      '2026-07-13': { completed: true, hours: 6, remarks: '画画时遮盖 🎨' }
-    }
-  },
-  {
-    id: '2',
-    name: '小华',
-    age: '4',
-    avatar: '👧',
-    cycleLength: 2,
-    cyclePattern: ['left', 'right'],
-    startDate: '2026-07-05',
-    targetHours: 4,
-    completedDates: {
-      '2026-07-12': { completed: true, hours: 4, remarks: '非常乖巧 🌸' },
-      '2026-07-13': { completed: false, hours: 0, remarks: '有一点点闹脾气，明天再补' }
-    }
-  }
-];
+// Default mock family data has been removed.
+const DEFAULT_MEMBERS: FamilyMember[] = [];
 
 export default function App() {
   const [members, setMembers] = useState<FamilyMember[]>([]);
@@ -75,7 +44,7 @@ export default function App() {
       }
     }
     setMembers(DEFAULT_MEMBERS);
-    setActiveMemberId('1');
+    setActiveMemberId('');
   }, []);
 
   // Save to local storage whenever members update
@@ -131,6 +100,29 @@ export default function App() {
   const activeMember = members.find(m => m.id === activeMemberId) || members[0];
 
   const renderActiveScreen = () => {
+    if (members.length === 0) {
+      return (
+        <div className="flex flex-col items-center justify-center text-center p-6 py-16 bg-white rounded-2xl border border-[#e0e3e5] shadow-xs space-y-6">
+          <div className="w-16 h-16 bg-[#e2eafb] rounded-full flex items-center justify-center text-3xl">
+            👋
+          </div>
+          <div>
+            <h2 className="text-sm font-bold text-gray-800">欢迎使用 OccuTrack</h2>
+            <p className="text-xs text-gray-500 mt-2 max-w-[240px] leading-relaxed">
+              目前还没有添加宝贝。请立即添加您的第一个宝贝，开启弱视遮盖与视力训练的记录之旅吧！
+            </p>
+          </div>
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="bg-[#004ac6] hover:bg-[#003ea8] text-xs font-bold text-white px-6 py-3 rounded-full shadow-md active:scale-95 transition-all flex items-center justify-center space-x-1.5"
+          >
+            <UserPlus className="w-4 h-4 text-white" />
+            <span>添加第一个宝贝</span>
+          </button>
+        </div>
+      );
+    }
+
     if (!activeMember) return null;
 
     switch (activeTab) {
