@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { ChevronLeft, ChevronRight, CheckCircle2, XCircle, Info, Calendar as CalIcon } from 'lucide-react';
 import { FamilyMember, Eye } from '../types';
 import { getEyeForDate } from '../lib/patchUtils';
-import { cn } from '../lib/utils';
+import { cn, formatLocalDate } from '../lib/utils';
 import {
   format,
   startOfMonth,
@@ -50,7 +50,7 @@ export function MobileCalendar({ member, onUpdateMember }: MobileCalendarProps) 
   };
 
   const handleToggleDayCompletion = (day: Date) => {
-    const dayStr = day.toISOString().split('T')[0];
+    const dayStr = formatLocalDate(day);
     const existing = member.completedDates[dayStr] || { completed: false, hours: member.targetHours, remarks: '' };
     
     const updatedDates = {
@@ -93,7 +93,7 @@ export function MobileCalendar({ member, onUpdateMember }: MobileCalendarProps) 
     return list;
   };
 
-  const selectedDayStr = selectedDay ? selectedDay.toISOString().split('T')[0] : '';
+  const selectedDayStr = selectedDay ? formatLocalDate(selectedDay) : '';
   const selectedDaySession = selectedDayStr ? member.completedDates[selectedDayStr] : null;
   const selectedDayEye = selectedDay ? getEyeForDate(selectedDay, member) : 'none';
 
@@ -133,7 +133,7 @@ export function MobileCalendar({ member, onUpdateMember }: MobileCalendarProps) 
           {days.map((day) => {
             const isCurrentMonth = isSameMonth(day, currentDate);
             const isDayToday = isToday(day);
-            const dayStr = day.toISOString().split('T')[0];
+            const dayStr = formatLocalDate(day);
             const session = member.completedDates[dayStr];
             const eye = getEyeForDate(day, member);
             const isSelected = selectedDay && dayStr === selectedDayStr;

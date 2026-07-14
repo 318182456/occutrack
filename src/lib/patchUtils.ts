@@ -1,5 +1,6 @@
 import { Eye, FamilyMember } from '../types';
 import { differenceInCalendarDays, parseISO, startOfDay } from 'date-fns';
+import { formatLocalDate } from './utils';
 
 /**
  * Calculates which eye should be patched on a given date for a family member.
@@ -60,7 +61,7 @@ export function getStreak(member: FamilyMember): number {
   let checkDate = today;
   
   while (true) {
-    const dateStr = checkDate.toISOString().split('T')[0];
+    const dateStr = formatLocalDate(checkDate);
     const session = member.completedDates[dateStr];
     
     if (session && session.completed) {

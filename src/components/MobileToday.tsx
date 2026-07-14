@@ -5,6 +5,7 @@ import { getEyeForDate, getCycleDayIndex, getStreak } from '../lib/patchUtils';
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'motion/react';
+import { formatLocalDate } from '../lib/utils';
 
 interface MobileTodayProps {
   member: FamilyMember;
@@ -13,7 +14,7 @@ interface MobileTodayProps {
 
 export function MobileToday({ member, onUpdateMember }: MobileTodayProps) {
   const today = new Date();
-  const todayStr = today.toISOString().split('T')[0];
+  const todayStr = formatLocalDate(today);
   const session = member.completedDates[todayStr] || { completed: false, hours: 0, remarks: '' };
 
   const eyeToPatch = getEyeForDate(today, member);
@@ -91,16 +92,19 @@ export function MobileToday({ member, onUpdateMember }: MobileTodayProps) {
 
   return (
     <div className="space-y-5 pb-16">
-      {/* Dynamic Celebration Pop-up */}
       <AnimatePresence>
         {showCelebrate && (
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
-            className="fixed inset-0 z-50 pointer-events-none flex items-center justify-center p-4 bg-black/25 backdrop-blur-xs"
+            onClick={() => setShowCelebrate(false)}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs cursor-pointer"
           >
-            <div className="bg-white rounded-2xl p-6 shadow-2xl flex flex-col items-center text-center max-w-xs border-2 border-amber-400">
+            <div 
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-2xl p-6 shadow-2xl flex flex-col items-center text-center max-w-xs border-2 border-amber-400 cursor-default"
+            >
               <motion.div
                 animate={{ rotate: [0, 15, -15, 10, -10, 0] }}
                 transition={{ duration: 0.8, repeat: Infinity, repeatDelay: 1 }}

@@ -7,7 +7,7 @@ import { MobileStats } from './components/MobileStats';
 import { MobileSettings } from './components/MobileSettings';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, UserPlus, Heart, Sparkles } from 'lucide-react';
-import { cn } from './lib/utils';
+import { cn, formatLocalDate } from './lib/utils';
 
 const LOCAL_STORAGE_KEY = 'occutrack_family_members';
 
@@ -78,7 +78,7 @@ export default function App() {
       avatar: newAvatar,
       cycleLength: newCycleLength,
       cyclePattern: pattern,
-      startDate: new Date().toISOString().split('T')[0],
+      startDate: formatLocalDate(new Date()),
       targetHours: newTargetHours,
       completedDates: {}
     };

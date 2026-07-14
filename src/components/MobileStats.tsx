@@ -4,6 +4,7 @@ import { FamilyMember } from '../types';
 import { getStreak } from '../lib/patchUtils';
 import { format, subDays, parseISO } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
+import { formatLocalDate } from '../lib/utils';
 
 interface MobileStatsProps {
   member: FamilyMember;
@@ -20,7 +21,7 @@ export function MobileStats({ member }: MobileStatsProps) {
 
     for (let i = 0; i < 30; i++) {
       const date = subDays(today, i);
-      const dateStr = date.toISOString().split('T')[0];
+      const dateStr = formatLocalDate(date);
       
       // Calculate if expected to patch on this date
       const start = new Date(member.startDate);
@@ -88,7 +89,7 @@ export function MobileStats({ member }: MobileStatsProps) {
     const today = new Date();
     for (let i = 0; i < 5; i++) {
       const d = subDays(today, i);
-      const dStr = d.toISOString().split('T')[0];
+      const dStr = formatLocalDate(d);
       const session = member.completedDates[dStr];
       if (session) {
         list.push({
