@@ -7,49 +7,17 @@ import { format, addDays } from 'date-fns';
 interface MobileSettingsProps {
   member: FamilyMember;
   onUpdateMember: (updated: FamilyMember) => void;
-  userId?: string;
-  onRestoreUserId?: (id: string) => void;
+  username?: string;
+  onLogout?: () => void;
 }
 
-export function MobileSettings({ member, onUpdateMember, userId, onRestoreUserId }: MobileSettingsProps) {
+export function MobileSettings({ member, onUpdateMember, username, onLogout }: MobileSettingsProps) {
   // Temporary component states that can be saved / reverted
   const [cycleLength, setCycleLength] = useState<number>(member.cycleLength);
   const [pattern, setPattern] = useState<Eye[]>(member.cyclePattern);
   const [startDate, setStartDate] = useState<string>(member.startDate);
   const [targetHours, setTargetHours] = useState<number>(member.targetHours);
   const [saveSuccess, setSaveSuccess] = useState(false);
-
-  // Backup & Restore states
-  const [inputUserId, setInputUserId] = useState('');
-  const [copySuccess, setCopySuccess] = useState(false);
-  const [restoreSuccess, setRestoreSuccess] = useState(false);
-  const [restoreError, setRestoreError] = useState('');
-
-  const handleCopyId = () => {
-    if (userId) {
-      navigator.clipboard.writeText(userId);
-      setCopySuccess(true);
-      setTimeout(() => setCopySuccess(false), 2000);
-    }
-  };
-
-  const handleRestore = () => {
-    if (!inputUserId.trim()) {
-      setRestoreError('请输入备份/恢复 ID');
-      return;
-    }
-    if (inputUserId.trim().length < 10) {
-      setRestoreError('无效的备份/恢复 ID');
-      return;
-    }
-    if (onRestoreUserId) {
-      onRestoreUserId(inputUserId.trim());
-      setRestoreSuccess(true);
-      setRestoreError('');
-      setInputUserId('');
-      setTimeout(() => setRestoreSuccess(false), 3000);
-    }
-  };
 
   // Stats calculation for preview
   const leftDaysCount = pattern.filter(e => e === 'left').length;
@@ -119,60 +87,42 @@ export function MobileSettings({ member, onUpdateMember, userId, onRestoreUserId
         </div>
       )}
 
-      {/* Cloud Backup & Sync Section */}
-      {userId && (
-        <div className="bg-white rounded-xl border border-[#e0e3e5] p-4 space-y-3">
-          <h3 className="text-xs font-bold text-[#191c1e] flex items-center space-x-1.5">
-            <span>☁️</span>
-            <span>云端同步与备份</span>
-          </h3>
-          <p className="text-[11px] text-[#737686] leading-relaxed">
-            数据已自动同步到云端。为了防止浏览器缓存丢失，或在其他设备上同步，请妥善保存您的备份 ID。
-          </p>
-          
-          {/* Current Backup ID Display */}
-          <div className="flex items-center space-x-2 bg-[#f7f9fb] border border-[#e0e3e5] rounded-lg p-2 text-xs">
-            <span className="text-[10px] font-mono text-[#434655] select-all flex-1 truncate">
-              {userId}
-            </span>
+      {/* Account & Cloud Sync Section */}
+      <div className="bg-white rounded-xl border border-[#e0e3e5] p-4 space-y-3">
+        <h3 className="text-xs font-bold text-[#191c1e] flex items-center space-x-1.5">
+          <span>☁️</span>
+          <span>账号与云端同步</span>
+        </h3>
+        {username && username !== '游客' ? (
+          <div className="space-y-3">
+            <p className="text-[11px] text-[#737686] leading-relaxed">
+              您当前已登录账号，所有打卡数据将自动加密保存至云端，且支持多设备同步。
+            </p>
+            <div className="flex items-center justify-between bg-[#f7f9fb] border border-[#e0e3e5] rounded-lg p-3 text-xs">
+              <span className="font-semibold text-[#434655]">当前账号：{username}</span>
+              <span className="text-[10px] text-emerald-600 font-bold">● 已开启云同步</span>
+            </div>
             <button
-              onClick={handleCopyId}
-              className="bg-[#004ac6] hover:bg-[#003ea8] text-white font-bold text-[10px] px-2.5 py-1.5 rounded-md transition-all active:scale-95 flex-shrink-0"
+              onClick={onLogout}
+              className="w-full bg-white border border-rose-200 hover:bg-rose-50 text-rose-600 py-2.5 rounded-lg text-xs font-bold transition-all active:scale-[0.98]"
             >
-              {copySuccess ? '已复制 ✓' : '复制 ID'}
+              退出登录
             </button>
           </div>
-
-          {/* Restore / Load Data From ID */}
-          <div className="border-t border-[#e0e3e5]/60 pt-3 space-y-2">
-            <label className="block text-[11px] font-bold text-[#434655]">恢复 / 导入云端数据</label>
-            <div className="flex space-x-2">
-              <input
-                type="text"
-                value={inputUserId}
-                onChange={(e) => {
-                  setInputUserId(e.target.value);
-                  setRestoreError('');
-                }}
-                placeholder="请输入其他设备的备份 ID"
-                className="flex-1 text-xs border border-[#e0e3e5] rounded-lg p-2 focus:outline-none focus:ring-1 focus:ring-[#004ac6] bg-[#f9fafb]"
-              />
-              <button
-                onClick={handleRestore}
-                className="bg-white border border-[#004ac6] text-[#004ac6] hover:bg-[#e2eafb]/20 font-bold text-xs px-3 py-2 rounded-lg transition-all active:scale-95"
-              >
-                导入
-              </button>
-            </div>
-            {restoreSuccess && (
-              <p className="text-[10px] text-emerald-600 font-bold">✓ 数据恢复成功！正在重新同步加载...</p>
-            )}
-            {restoreError && (
-              <p className="text-[10px] text-rose-500 font-bold">{restoreError}</p>
-            )}
+        ) : (
+          <div className="space-y-3">
+            <p className="text-[11px] text-amber-600 leading-relaxed font-medium">
+              ⚠ 当前使用“游客模式”。由于未登录账号，如果清除浏览器缓存或更换设备，数据可能会丢失。
+            </p>
+            <button
+              onClick={onLogout}
+              className="w-full bg-[#004ac6] hover:bg-[#003ea8] text-white py-2.5 rounded-lg text-xs font-bold transition-all active:scale-[0.98]"
+            >
+              立即注册 / 登录账号
+            </button>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* 2nd Screen: Cycle Config Card */}
       <div className="bg-white rounded-xl border border-[#e0e3e5] p-4 space-y-4">

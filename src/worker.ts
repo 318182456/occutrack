@@ -76,6 +76,42 @@ export default {
 
     if (pathname.startsWith('/api/')) {
       try {
+        // KV User Auth Endpoints
+        if (pathname === '/api/auth/register' && request.method === 'POST') {
+          const { username, password } = await request.json() as any;
+          if (!username || !password) {
+            return err('账号和密码不能为空', 400);
+          }
+          const userKey = username.trim().toLowerCase();
+          const key = `occutrack:auth:${userKey}`;
+          const existing = await env.KV.get(key);
+          if (existing) {
+            return err('该账号已存在，请换一个昵称或直接登录', 400);
+          }
+          const userId = crypto.randomUUID();
+          await env.KV.put(key, JSON.stringify({ password: password.trim(), userId }));
+          await env.KV.put(`occutrack:user:${userId}`, JSON.stringify([]));
+          return ok({ userId, username: username.trim() });
+        }
+
+        if (pathname === '/api/auth/login' && request.method === 'POST') {
+          const { username, password } = await request.json() as any;
+          if (!username || !password) {
+            return err('账号和密码不能为空', 400);
+          }
+          const userKey = username.trim().toLowerCase();
+          const key = `occutrack:auth:${userKey}`;
+          const val = await env.KV.get(key);
+          if (!val) {
+            return err('账号或密码错误', 400);
+          }
+          const account = JSON.parse(val);
+          if (account.password !== password.trim()) {
+            return err('账号或密码错误', 400);
+          }
+          return ok({ userId: account.userId, username: username.trim() });
+        }
+
         // KV Data Sync Endpoints
         if (pathname === '/api/data') {
           if (request.method === 'GET') {

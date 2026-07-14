@@ -20,7 +20,16 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<string>('today');
   const [showAddModal, setShowAddModal] = useState<boolean>(false);
   const [userId, setUserId] = useState<string>('');
+  const [username, setUsername] = useState<string>('');
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  // Login/Register UI states
+  const [isRegisterMode, setIsRegisterMode] = useState<boolean>(false);
+  const [authUsername, setAuthUsername] = useState<string>('');
+  const [authPassword, setAuthPassword] = useState<string>('');
+  const [authError, setAuthError] = useState<string>('');
+  const [authLoading, setAuthLoading] = useState<boolean>(false);
 
   // Modal input states
   const [newName, setNewName] = useState('');
@@ -36,14 +45,17 @@ export default function App() {
   const [editBirthDate, setEditBirthDate] = useState('2021-01-01');
   const [editAvatar, setEditAvatar] = useState('👦');
 
-  // Load and initialize userId
+  // Load and initialize user session
   useEffect(() => {
-    let id = localStorage.getItem('occutrack_user_id');
-    if (!id) {
-      id = crypto.randomUUID();
-      localStorage.setItem('occutrack_user_id', id);
+    const id = localStorage.getItem('occutrack_user_id');
+    const user = localStorage.getItem('occutrack_username');
+    if (id && user) {
+      setUserId(id);
+      setUsername(user);
+      setIsLoggedIn(true);
+    } else {
+      setIsLoading(false);
     }
-    setUserId(id);
   }, []);
 
   // Fetch data from KV when userId changes
@@ -88,9 +100,72 @@ export default function App() {
     fetchData();
   }, [userId]);
 
-  const handleRestoreUserId = (newId: string) => {
-    localStorage.setItem('occutrack_user_id', newId);
-    setUserId(newId);
+  const handleAuthSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!authUsername.trim() || !authPassword.trim()) {
+      setAuthError('账号和密码不能为空');
+      return;
+    }
+
+    setAuthError('');
+    setAuthLoading(true);
+
+    const url = isRegisterMode ? '/api/auth/register' : '/api/auth/login';
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: authUsername.trim(),
+          password: authPassword.trim()
+        })
+      });
+
+      const data = await res.json() as any;
+      if (!res.ok) {
+        setAuthError(data.error || '操作失败，请重试');
+        setAuthLoading(false);
+        return;
+      }
+
+      localStorage.setItem('occutrack_user_id', data.userId);
+      localStorage.setItem('occutrack_username', data.username);
+      
+      setUserId(data.userId);
+      setUsername(data.username);
+      setIsLoggedIn(true);
+      
+      setAuthUsername('');
+      setAuthPassword('');
+    } catch (e) {
+      console.error('Auth error:', e);
+      setAuthError('连接服务器失败，请检查网络');
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const handleGuestMode = () => {
+    let id = localStorage.getItem('occutrack_user_id');
+    if (!id) {
+      id = crypto.randomUUID();
+      localStorage.setItem('occutrack_user_id', id);
+    }
+    localStorage.setItem('occutrack_username', '游客');
+    setUserId(id);
+    setUsername('游客');
+    setIsLoggedIn(true);
+  };
+
+  const handleLogout = () => {
+    if (window.confirm('确定要退出当前账号吗？（若退出为游客模式，本地数据将在登录其他账号后清除）')) {
+      localStorage.removeItem('occutrack_user_id');
+      localStorage.removeItem('occutrack_username');
+      setUserId('');
+      setUsername('');
+      setIsLoggedIn(false);
+      setMembers([]);
+    }
   };
 
   // Save to local storage and KV sync
@@ -251,8 +326,8 @@ export default function App() {
           <MobileSettings
             member={activeMember}
             onUpdateMember={handleUpdateMember}
-            userId={userId}
-            onRestoreUserId={handleRestoreUserId}
+            username={username}
+            onLogout={handleLogout}
           />
         );
       default:
@@ -261,6 +336,84 @@ export default function App() {
   };
 
   const avatarsList = ['👦', '👧', '👶', '🦁', '🐨', '🐼', '🐱', '🐶', '🦄', '🐰'];
+
+  if (!isLoggedIn) {
+    return (
+      <div className="w-full h-full flex flex-col items-center justify-center bg-gray-50 px-6 select-none">
+        <div className="w-full max-w-sm bg-white rounded-2xl border border-[#e0e3e5] shadow-xl p-6 space-y-6">
+          <div className="text-center">
+            <div className="w-16 h-16 bg-[#e2eafb] rounded-2xl flex items-center justify-center text-3xl mx-auto shadow-xs">
+              👁️‍🗨️
+            </div>
+            <h2 className="text-base font-bold text-gray-800 mt-3">OccuTrack 护眼日记</h2>
+            <p className="text-[10px] text-gray-500 mt-1">云端同步打卡记录，记录宝贝的成长与改变</p>
+          </div>
+
+          <form onSubmit={handleAuthSubmit} className="space-y-4 text-xs">
+            <div>
+              <label className="block text-[#434655] font-bold mb-1.5">账号名称 / 手机号</label>
+              <input
+                type="text"
+                required
+                value={authUsername}
+                onChange={(e) => setAuthUsername(e.target.value)}
+                placeholder="请输入您的账号"
+                className="w-full border border-[#e0e3e5] rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-[#004ac6] bg-[#f9fafb]"
+              />
+            </div>
+
+            <div>
+              <label className="block text-[#434655] font-bold mb-1.5">登录密码</label>
+              <input
+                type="password"
+                required
+                value={authPassword}
+                onChange={(e) => setAuthPassword(e.target.value)}
+                placeholder="请输入您的密码"
+                className="w-full border border-[#e0e3e5] rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-[#004ac6] bg-[#f9fafb]"
+              />
+            </div>
+
+            {authError && (
+              <p className="text-[10px] text-rose-500 font-bold bg-rose-50 border border-rose-100 rounded-lg p-2.5">
+                ⚠ {authError}
+              </p>
+            )}
+
+            <div className="pt-2">
+              <button
+                type="submit"
+                disabled={authLoading}
+                className="w-full bg-[#004ac6] hover:bg-[#003ea8] text-white py-3 rounded-lg font-bold transition-all disabled:opacity-50 active:scale-[0.98] flex items-center justify-center"
+              >
+                {authLoading ? '正在连接...' : (isRegisterMode ? '立即注册并登录' : '立即登录')}
+              </button>
+            </div>
+          </form>
+
+          <div className="flex items-center justify-between text-[11px] font-semibold pt-1 border-t border-gray-100 text-[#004ac6]">
+            <button
+              onClick={() => {
+                setIsRegisterMode(!isRegisterMode);
+                setAuthError('');
+              }}
+            >
+              {isRegisterMode ? '已有账号？去登录' : '没有账号？立即注册'}
+            </button>
+
+            <button
+              type="button"
+              onClick={handleGuestMode}
+              className="text-[#434655] hover:text-[#004ac6] flex items-center space-x-1"
+            >
+              <span>游客模式使用</span>
+              <span>→</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative w-full h-full">
