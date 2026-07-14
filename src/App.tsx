@@ -24,7 +24,7 @@ export default function App() {
 
   // Modal input states
   const [newName, setNewName] = useState('');
-  const [newAge, setNewAge] = useState('5');
+  const [newBirthDate, setNewBirthDate] = useState('2021-01-01');
   const [newAvatar, setNewAvatar] = useState('👦');
   const [newCycleLength, setNewCycleLength] = useState(3);
   const [newTargetHours, setNewTargetHours] = useState(6);
@@ -122,10 +122,15 @@ export default function App() {
       pattern.push(i % 3 < 2 ? 'left' : 'right');
     }
 
+    const calculatedAge = newBirthDate 
+      ? String(Math.max(0, new Date().getFullYear() - new Date(newBirthDate).getFullYear()))
+      : '5';
+
     const newMember: FamilyMember = {
       id: Date.now().toString(),
       name: newName,
-      age: newAge,
+      age: calculatedAge,
+      birthDate: newBirthDate,
       avatar: newAvatar,
       cycleLength: newCycleLength,
       cyclePattern: pattern,
@@ -141,7 +146,7 @@ export default function App() {
 
     // Reset fields
     setNewName('');
-    setNewAge('5');
+    setNewBirthDate('2021-01-01');
     setNewAvatar('👦');
     setNewCycleLength(3);
     setNewTargetHours(6);
@@ -267,15 +272,14 @@ export default function App() {
                   />
                 </div>
 
-                {/* Age */}
+                {/* Birth Date */}
                 <div>
-                  <label className="block text-[#434655] font-bold mb-1.5">年龄</label>
+                  <label className="block text-[#434655] font-bold mb-1.5">出生日期</label>
                   <input
-                    type="number"
-                    min={1}
-                    max={100}
-                    value={newAge}
-                    onChange={(e) => setNewAge(e.target.value)}
+                    type="date"
+                    required
+                    value={newBirthDate}
+                    onChange={(e) => setNewBirthDate(e.target.value)}
                     className="w-full border border-[#e0e3e5] rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-[#004ac6] bg-[#f9fafb]"
                   />
                 </div>

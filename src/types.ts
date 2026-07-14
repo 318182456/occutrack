@@ -10,6 +10,7 @@ export interface FamilyMember {
   id: string;
   name: string;
   age: string;
+  birthDate?: string;
   avatar: string;
   cycleLength: number;
   cyclePattern: Eye[];

@@ -80,3 +80,21 @@ export function getStreak(member: FamilyMember): number {
   
   return streak;
 }
+
+/**
+ * Calculates the member's current age dynamically if birthDate is set.
+ * Falls back to the static age string if birthDate is not available.
+ */
+export function getMemberAge(member: FamilyMember): string {
+  if (member.birthDate) {
+    const birth = new Date(member.birthDate);
+    const today = new Date();
+    let age = today.getFullYear() - birth.getFullYear();
+    const monthDiff = today.getMonth() - birth.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+      age--;
+    }
+    return String(Math.max(0, age));
+  }
+  return member.age;
+}

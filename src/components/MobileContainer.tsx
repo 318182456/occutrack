@@ -3,6 +3,7 @@ import { Users, UserPlus, Heart, Home, Calendar, BarChart2, Settings, Sparkles }
 import { FamilyMember } from '../types';
 import { cn } from '../lib/utils';
 import { motion } from 'motion/react';
+import { getMemberAge } from '../lib/patchUtils';
 
 interface MobileContainerProps {
   children: React.ReactNode;
@@ -84,7 +85,7 @@ export function MobileContainer({
                   >
                     <span className="flex items-center space-x-2">
                       <span>{m.avatar}</span>
-                      <span>{m.name} ({m.age}岁)</span>
+                      <span>{m.name} ({getMemberAge(m)}岁)</span>
                     </span>
                     {m.id === activeMemberId && <span className="text-xs">✓</span>}
                   </button>
