@@ -2,7 +2,7 @@ import React from 'react';
 import { Award, Flame, TrendingUp, Calendar, CheckCircle2, Star, Trophy, Heart } from 'lucide-react';
 import { FamilyMember } from '../types';
 import { getStreak } from '../lib/patchUtils';
-import { format, subDays, parseISO } from 'date-fns';
+import { format, subDays, parseISO, differenceInCalendarDays } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 import { formatLocalDate } from '../lib/utils';
 
@@ -24,8 +24,8 @@ export function MobileStats({ member }: MobileStatsProps) {
       const dateStr = formatLocalDate(date);
       
       // Calculate if expected to patch on this date
-      const start = new Date(member.startDate);
-      const diffDays = Math.floor((date.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+      const start = parseISO(member.startDate);
+      const diffDays = differenceInCalendarDays(date, start);
       
       if (diffDays >= 0) {
         const cycleIndex = diffDays % member.cycleLength;
