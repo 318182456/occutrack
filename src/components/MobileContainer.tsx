@@ -29,7 +29,6 @@ export function MobileContainer({
   const menuItems = [
     { id: 'today', label: '每日打卡', icon: Home },
     { id: 'calendar', label: '遮盖日历', icon: Calendar },
-    { id: 'ai', label: 'AI 助手', icon: Sparkles },
     { id: 'stats', label: '荣誉统计', icon: BarChart2 },
     { id: 'settings', label: '方案设置', icon: Settings }
   ];

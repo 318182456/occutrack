@@ -5,7 +5,6 @@ import { MobileToday } from './components/MobileToday';
 import { MobileCalendar } from './components/MobileCalendar';
 import { MobileStats } from './components/MobileStats';
 import { MobileSettings } from './components/MobileSettings';
-import { MobileAI } from './components/MobileAI';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, UserPlus, Heart, Sparkles } from 'lucide-react';
 import { cn } from './lib/utils';
@@ -130,8 +129,6 @@ export default function App() {
         return <MobileToday member={activeMember} onUpdateMember={handleUpdateMember} />;
       case 'calendar':
         return <MobileCalendar member={activeMember} onUpdateMember={handleUpdateMember} />;
-      case 'ai':
-        return <MobileAI member={activeMember} />;
       case 'stats':
         return <MobileStats member={activeMember} />;
       case 'settings':
