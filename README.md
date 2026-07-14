@@ -1,20 +1,48 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
+# OccuTrack 家庭护眼卫士
 
-# Run and deploy your AI Studio app
+专为家庭设计的儿童眼科遮盖（弱视训练）智能追踪助手，帮助家长科学记录并鼓励宝贝健康遮眼。
 
-This contains everything you need to run your app locally.
+## 功能特点
 
-View your app in AI Studio: https://ai.studio/apps/87292f93-c693-426a-9d6b-8630dae88268
+- **智能遮盖追踪**：科学记录每日遮盖时长与训练进度。
+- **趣味化打卡**：通过趣味交互与关怀，鼓励宝贝坚持完成遮盖疗法。
+- **家长数据分析**：为家长提供直观的数据统计与视力恢复追踪。
+- **AI 智能助手**：提供科学的弱视康复与护眼建议。
 
-## Run Locally
+## 本地开发与运行
 
-**Prerequisites:**  Node.js
+### 前提条件
 
+- [Node.js](https://nodejs.org/) (推荐 v18+)
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+### 步骤
+
+1. **安装依赖**：
+   ```bash
+   npm install
+   ```
+
+2. **配置环境变量**：
+   将根目录下的 `.env.example` 复制并重命名为 `.env.local`：
+   ```bash
+   cp .env.example .env.local
+   ```
+   并在 `.env.local` 中配置您的 Gemini API Key：
+   ```env
+   GEMINI_API_KEY="您的_GEMINI_API_KEY"
+   APP_URL="http://localhost:5173"
+   ```
+
+3. **启动本地开发服务器**：
+   ```bash
+   npm run dev
+   ```
+
+4. **构建项目**：
+   ```bash
+   npm run build
+   ```
+
+5. **Cloudflare Workers 本地调试与部署**：
+   - 本地调试：`npm run dev:worker`
+   - 部署：`npm run deploy`
